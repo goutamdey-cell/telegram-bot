@@ -3,7 +3,6 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram.error import BadRequest
 
 TOKEN = "8995087250:AAHhoO1OViO6sryyi-dOHUNjOXqVQOBpy6I"
-
 OWNER_ID = 7504827194
 
 CHANNELS = {
@@ -20,7 +19,7 @@ CHANNELS = {
     "Channel 11": -1003944523544,
 }
 
-async def only_owner(update):
+async def only_owner(update: Update):
     return update.effective_user and update.effective_user.id == OWNER_ID
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -33,18 +32,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await only_owner(update):
         return
+
     if len(context.args) != 1:
         await update.message.reply_text("Usage: /check USER_ID")
         return
+
     uid = int(context.args[0])
     found = []
+
     for name, chat_id in CHANNELS.items():
         try:
             member = await context.bot.get_chat_member(chat_id, uid)
             if member.status not in ("left", "kicked"):
                 found.append(name)
-        except Exception:
+        except:
             pass
+
     if found:
         await update.message.reply_text("User found in:\n" + "\n".join(found))
     else:
@@ -53,11 +56,14 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await only_owner(update):
         return
+
     if len(context.args) != 1:
         await update.message.reply_text("Usage: /remove USER_ID")
         return
+
     uid = int(context.args[0])
     removed = []
+
     for name, chat_id in CHANNELS.items():
         try:
             await context.bot.ban_chat_member(chat_id, uid)
@@ -65,14 +71,16 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
             removed.append(name)
         except BadRequest:
             pass
-        except Exception:
+        except:
             pass
+
     if removed:
         await update.message.reply_text("Removed from:\n" + "\n".join(removed))
     else:
         await update.message.reply_text("Nothing removed.")
 
 app = Application.builder().token(TOKEN).build()
+
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("check", check))
 app.add_handler(CommandHandler("remove", remove))
